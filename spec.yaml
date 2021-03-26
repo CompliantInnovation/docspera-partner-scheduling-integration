@@ -50,7 +50,10 @@ paths:
       responses:
         "200":
           description: Event details
-          $ref: "#/components/schemas/EventScheduling"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventScheduling"
         "400":
           $ref: "#/components/responses/400Error"
 servers:
