@@ -80,15 +80,9 @@ components:
               status:
                 type: string
                 example: Error
-  securitySchemes:
-    UserSecurity:
-      type: http
-      scheme: basic
   schemas:
     EventScheduling:
       type: object
-      required:
-        - username
       properties:
         event:
           type: object
