@@ -1,8 +1,21 @@
 openapi: 3.0.0
 info:
-  version: "1.0.2"
+  version: "1.4.2"
   title: Event Scheduling for Generic Partner Integrations
   description: Scheduling information directly from the EMR.
+  x-logo:
+    url: https://docspera.com/assets/D3/pic/Logo-Full-White-Padded.png
+    backgroundColor: "#0096FA"
+    href: https://docspera.com
+  contact:
+    email: jon@docspera.com
+  license:
+    name: Proprietary
+tags:
+  - name: user
+    x-displayName: "Authenticated User"
+    description: |
+      apis available to an authenticated user
 security:
   - UserSecurity: []
 paths:
