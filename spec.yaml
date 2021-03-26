@@ -16,8 +16,6 @@ tags:
     x-displayName: "Authenticated User"
     description: |
       apis available to an authenticated user
-security:
-  - UserSecurity: []
 paths:
   /event-scheduling:
     post:
