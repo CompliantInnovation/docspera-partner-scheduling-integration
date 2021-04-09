@@ -62,16 +62,17 @@ paths:
       requestBody:
         content:
           application/json:
-            patient:
-                required:
-                    - "hash"
-                type: object
-                properties:
-                    hash:
-                        type: string
-                        description: A unique identifier for the patient
-                    demographics:
-                        $ref: "#/components/schemas/demographics")            
+            scheme:
+                patient:
+                    required:
+                     - "hash"
+                    type: object
+                    properties:
+                        hash:
+                            type: string
+                            description: A unique identifier for the patient
+                        demographics:
+                            $ref: "#/components/schemas/demographics")            
       responses:
         "200":
           description: Successfully updated patient demographics
@@ -256,7 +257,7 @@ components:
                       description: Full name of attending physician
      demographics:
         type: object
-         properties:
+        properties:
             gender:
                 type: string
                 example: "Female"
