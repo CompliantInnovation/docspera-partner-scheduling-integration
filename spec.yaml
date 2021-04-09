@@ -255,22 +255,22 @@ components:
                       type: string
                       example: "https://docspera/dicom/4159152/study/181002367/1744f3954c37e2ea6bf693bf37b8e98b.zip"
                       description: Full name of attending physician
-     demographics:
-        type: object
-        properties:
-            gender:
-                type: string
-                example: "Female"
-                description: Patient's natural gender. Legal values are * Male, * Female
-            age:
-                type: integer
-                example: 53
-                description: Patient's age in years
-            height:
-                type: float
-                example: 178.00
-                description: Patient height in cm
-            weight:
-                type: float
-                example: 71.214
-                description: Patient weight in kg
+        demographics:
+            type: object
+            properties:
+                gender:
+                    type: string
+                    example: "Female"
+                    description: Patient's natural gender. Legal values are * Male, * Female
+                age:
+                    type: integer
+                    example: 53
+                    description: Patient's age in years
+                height:
+                    type: float
+                    example: 178.00
+                    description: Patient height in cm
+                weight:
+                    type: float
+                    example: 71.214
+                    description: Patient weight in kg
