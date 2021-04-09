@@ -224,7 +224,7 @@ components:
                   initials:
                     type: string
                     example: "B. M."
-                    description: Medical record number of the patient
+                    description: Patient's initials
                   hash:
                     type: string
                     description: A unique identifier for the patient
