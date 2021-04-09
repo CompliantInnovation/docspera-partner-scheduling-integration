@@ -71,8 +71,7 @@ paths:
                         type: string
                         description: A unique identifier for the patient
                     demographics:
-                        schema:
-                            $ref: "#/components/schemas/demographics")            
+                        $ref: "#/components/schemas/demographics")            
       responses:
         "200":
           description: Successfully updated patient demographics
@@ -91,8 +90,7 @@ paths:
                             type: string
                             description: A unique identifier for the patient
                         demographics:
-                            schema:
-                                $ref: "#/components/schemas/demographics")            
+                            $ref: "#/components/schemas/demographics")            
         "400":
           $ref: "#/components/responses/400Error"
 servers:
@@ -228,7 +226,6 @@ components:
                     type: string
                     description: A unique identifier for the patient
             demographics:
-              schema:
                 $ref: "#/components/schemas/demographics")
             equipment:
               type: object
