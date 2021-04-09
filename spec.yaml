@@ -91,7 +91,7 @@ paths:
                             type: string
                             description: A unique identifier for the patient
                         demographics:
-                            $ref: "#/components/schemas/demographics")            
+                            $ref: "#/components/schemas/demographics"         
         "400":
           $ref: "#/components/responses/400Error"
 servers:
@@ -227,7 +227,7 @@ components:
                     type: string
                     description: A unique identifier for the patient
             demographics:
-                $ref: "#/components/schemas/demographics")
+                $ref: "#/components/schemas/demographics"
             equipment:
               type: object
               properties:
