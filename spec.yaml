@@ -65,7 +65,7 @@ paths:
             scheme:
                 patient:
                     required:
-                     - "hash"
+                        - "hash"
                     type: object
                     properties:
                         hash:
