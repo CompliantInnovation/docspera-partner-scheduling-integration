@@ -65,6 +65,8 @@ paths:
             schema:
                 type: object
                 properties:
+                    physician:
+                        $ref: "#/components/schemas/physician"
                     patient:
                         required:
                             - "hash"
@@ -92,6 +94,8 @@ paths:
                         hash:
                             type: string
                             description: A unique identifier for the patient
+                        physician:
+                            $ref: "#/components/schemas/physician"
                         demographics:
                             $ref: "#/components/schemas/demographics"
         "400":
@@ -186,18 +190,8 @@ components:
                   description: Surgical location
             physician:
                 type: array
-                required:
-                    - "npi"
                 items:
-                  properties:
-                    npi:
-                      type: string
-                      example: "1005300087"
-                      description: NPI is a unique 10-digit identification number issued by CMS
-                    name:
-                      type: string
-                      example: Andrew Surgeon
-                      description: Full name of attending physician
+                  $ref: "#/components/schemas/physician"
             reps:
                 type: array
                 items:
@@ -219,8 +213,16 @@ components:
                     description: Medical record number of the patient
                   other_mrns:
                     type: array
-                    example: ["JDV1337", "JD3246", "67JONDEV"]
-                    description: Any additional medical record numbers associated with the patient
+                    items:
+                        properties:
+                            mrn:
+                                type: string
+                                example: JDV123
+                                description: An additional medical record numbers associated with the patient
+                            location:
+                                type: string
+                                example: Mercy Hospital
+                                description: The facility associated with the MRN
                   initials:
                     type: string
                     example: "B. M."
@@ -276,3 +278,16 @@ components:
                 type: float
                 example: 71.214
                 description: Patient weight in kg
+    physician:
+        type: object
+         required:
+             - "npi"
+         properties:
+            npi:
+                type: string
+                example: "1005300087"
+                description: NPI is a unique 10-digit identification number issued by CMS
+            name:
+                type: string
+                example: Andrew Surgeon
+                description: Full name of attending physician
