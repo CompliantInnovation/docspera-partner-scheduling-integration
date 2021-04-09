@@ -203,7 +203,7 @@ components:
                     name:
                       type: string
                       example: Brian Miller
-                      description: Full name of attending physician
+                      description: Full name of industry representative
             patient:
               type: object
               properties:
@@ -242,7 +242,7 @@ components:
                       name:
                         type: string
                         example: Device A iHip 2000
-                        description: Full name of attending physician
+                        description: Name of the device
             study:
                 type: array
                 items:
@@ -258,7 +258,7 @@ components:
                     url:
                       type: string
                       example: "https://docspera/dicom/4159152/study/181002367/1744f3954c37e2ea6bf693bf37b8e98b.zip"
-                      description: Full name of attending physician
+                      description: The URL of the study
     demographics:
         type: object
         properties:
@@ -273,11 +273,11 @@ components:
             height:
                 type: float
                 example: 178.00
-                description: Patient height in cm
+                description: Patient's height in cm
             weight:
                 type: float
                 example: 71.214
-                description: Patient weight in kg
+                description: Patient's weight in kg
     physician:
         type: object
         required:
