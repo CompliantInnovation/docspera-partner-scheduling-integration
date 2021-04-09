@@ -280,9 +280,9 @@ components:
                 description: Patient weight in kg
     physician:
         type: object
-         required:
-             - "npi"
-         properties:
+        required:
+            - "npi"
+        properties:
             npi:
                 type: string
                 example: "1005300087"
