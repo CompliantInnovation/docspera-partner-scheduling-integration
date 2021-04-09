@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: "1.4.2"
+  version: "1.4.3"
   title: Event Scheduling for Generic Partner Integrations
   description: Scheduling information directly from the EMR.
   x-logo:
