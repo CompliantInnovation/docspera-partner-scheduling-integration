@@ -75,6 +75,8 @@ paths:
                             hash:
                                 type: string
                                 description: A unique identifier for the patient
+                            other_mrns:
+                                $ref: "#/components/schemas/other_mrns"
                             demographics:
                                 $ref: "#/components/schemas/demographics"
       responses:
@@ -94,6 +96,8 @@ paths:
                         hash:
                             type: string
                             description: A unique identifier for the patient
+                        other_mrns:
+                            $ref: "#/components/schemas/other_mrns"
                         physician:
                             $ref: "#/components/schemas/physician"
                         demographics:
@@ -199,7 +203,7 @@ components:
                     id:
                       type: integer
                       example: "430"
-                      description: NPI is a unique 10-digit identification number issued by CMS
+                      description: An identification number assigned by DocSpera
                     name:
                       type: string
                       example: Brian Miller
@@ -212,17 +216,7 @@ components:
                     example: 48214XZ3
                     description: Medical record number of the patient
                   other_mrns:
-                    type: array
-                    items:
-                        properties:
-                            mrn:
-                                type: string
-                                example: JDV123
-                                description: An additional medical record numbers associated with the patient
-                            location:
-                                type: string
-                                example: Mercy Hospital
-                                description: The facility associated with the MRN
+                    $ref: "#/components/schemas/other_mrns"
                   initials:
                     type: string
                     example: "B. M."
@@ -249,8 +243,8 @@ components:
                   properties:
                     id:
                       type: integer
-                      example: 181002367
-                      description: NPI is a unique 10-digit identification number issued by CMS
+                      example: 1810
+                      description: An identification number assigned by DocSpera
                     name:
                       type: string
                       example: "MRIX LUMBAR"
@@ -291,3 +285,15 @@ components:
                 type: string
                 example: Andrew Surgeon
                 description: Full name of attending physician
+    other_mrns:
+        type: array
+        items:
+            properties:
+                mrn:
+                    type: string
+                    example: JDV123
+                    description: An additional medical record number associated with the patient
+                location:
+                    type: string
+                    example: Mercy Hospital
+                    description: The facility associated with the MRN
