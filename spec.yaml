@@ -63,16 +63,18 @@ paths:
         content:
           application/json:
             schema:
-                patient:
-                    required:
-                        - "hash"
-                    type: object
-                    properties:
-                        hash:
-                            type: string
-                            description: A unique identifier for the patient
-                        demographics:
-                            $ref: "#/components/schemas/demographics"
+                type: object
+                properties:
+                    patient:
+                        required:
+                            - "hash"
+                        type: object
+                        properties:
+                            hash:
+                                type: string
+                                description: A unique identifier for the patient
+                            demographics:
+                                $ref: "#/components/schemas/demographics"
       responses:
         "200":
           description: Successfully updated patient demographics
