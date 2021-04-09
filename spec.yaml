@@ -62,7 +62,7 @@ paths:
       requestBody:
         content:
           application/json:
-            scheme:
+            schema:
                 patient:
                     required:
                         - "hash"
