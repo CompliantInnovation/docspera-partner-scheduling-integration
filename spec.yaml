@@ -278,8 +278,8 @@ components:
             - "npi"
         properties:
             npi:
-                type: string
-                example: "1005300087"
+                type: integer
+                example: 1005300087
                 description: NPI is a unique 10-digit identification number issued by CMS
             name:
                 type: string
