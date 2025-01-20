@@ -303,6 +303,11 @@ components:
     AsyncResponse:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Job UUID
+          example: "c97e5eca-7b3d-4b97-89b2-c56e83c02215"
         status:
           type: string
           enum:
