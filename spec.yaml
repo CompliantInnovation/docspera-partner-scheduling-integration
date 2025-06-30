@@ -116,37 +116,49 @@ webhooks:
                   event_type: "surgical_case.created"
                   event_timestamp: "2025-01-15T10:30:00Z"
                   data:
-                    id: 199967
-                    universal_id: "26B21A"
-                    start: "2015-05-27T14:00:00Z"
-                    end: "2015-05-27T16:30:00Z"
-                    summary: "Total Hip Replacement"
-                    description: "Request for additional femoral head"
-                    procedure:
-                      body_site: "hip"
-                      name: "arthroplasty"
-                      approach: "direct anterior"
-                      implant: "bipolar"
-                      laterality: "left"
-                      revision: false
-                      trauma: false
-                      status: "confirmed"
-                    patient:
-                      mrn: "48214XZ3"
-                      name: "B. M."
-                      hash: "5710dba0761d92cd46d6a9e27da76c83f0721e6b"
-                      gender: "Female"
-                      age: 53
-                      contact:
-                        phone: "+15555555555"
-                        mobile: "+15555555555"
-                        email: "joe@shmo.com"
-                    location:
-                      ahaid: 123
-                      name: "St John Hospital"
-                    provider:
-                      npi: 1005300087
-                      name: "Andrew Surgeon"
+                    subscription:
+                      subscription_id: "sub_abc123def456"
+                      case_id: 199967
+                      case_universal_id: "26B21A"
+                      subscriber_id: "client_xyz"
+                      subscriber_name: "MedDevice Corp"
+                      access_level: "full"
+                      granted_at: "2025-01-15T09:00:00Z"
+                      granted_by: "admin@hospital.com"
+                      expires_at: "2025-12-31T23:59:59Z"
+                      is_active: true
+                    surgical_case:
+                      id: 199967
+                      universal_id: "26B21A"
+                      start: "2015-05-27T14:00:00Z"
+                      end: "2015-05-27T16:30:00Z"
+                      summary: "Total Hip Replacement"
+                      description: "Request for additional femoral head"
+                      procedure:
+                        body_site: "hip"
+                        name: "arthroplasty"
+                        approach: "direct anterior"
+                        implant: "bipolar"
+                        laterality: "left"
+                        revision: false
+                        trauma: false
+                        status: "confirmed"
+                      patient:
+                        mrn: "48214XZ3"
+                        name: "B. M."
+                        hash: "5710dba0761d92cd46d6a9e27da76c83f0721e6b"
+                        gender: "Female"
+                        age: 53
+                        contact:
+                          phone: "+15555555555"
+                          mobile: "+15555555555"
+                          email: "joe@shmo.com"
+                      location:
+                        ahaid: 123
+                        name: "St John Hospital"
+                      provider:
+                        npi: 1005300087
+                        name: "Andrew Surgeon"
               subscriptionGranted:
                 summary: Subscription Granted Example
                 value:
