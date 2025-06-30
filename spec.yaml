@@ -1,6 +1,6 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  version: "1.4.3"
+  version: "2.0.0"
   title: Event Scheduling for Generic Partner Integrations
   description: Scheduling information directly from the EMR.
   x-logo:
@@ -8,329 +8,736 @@ info:
     backgroundColor: "#0096FA"
     href: https://docspera.com
   contact:
-    email: jon@docspera.com
+    email: support@docspera.com
   license:
     name: Proprietary
-tags:
-  - name: outbound
-    x-displayName: "Outbound webhook payloads"
-    description: |
-      Schemas DocSpera Sends to partner endpoints
-  - name: inbound
-    x-displayName: "Inbound webhook payloads"
-    description: |
-      Schemas DocSpera Expects from partner endpoints
+
+servers:
+  - url: https://subscriber.example.com
+    description: Subscriber webhook endpoint
+  - url: https://api.surgicaldata.example.com
+    description: Webhook provider API for feedback
+
 paths:
-  /api/v1/events:
-    put:
-      description: Ships all the necessary scheduling information.
+  /webhook/feedback:
+    post:
+      summary: Report Webhook Processing Error
+      description: Optional endpoint for subscribers to report errors or issues when processing webhook payloads
+      operationId: reportWebhookError
       tags:
-        - outbound
+        - Feedback
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EventScheduling"
+              $ref: '#/components/schemas/WebhookFeedback'
+            examples:
+              validationError:
+                summary: Schema Validation Error
+                value:
+                  event_id: "evt_1a2b3c4d5e6f7g8h9i0j"
+                  error_type: "validation_error"
+                  error_code: "INVALID_SCHEMA"
+                  error_message: "Required field 'procedure.status' is missing"
+                  error_details:
+                    field: "procedure.status"
+                    expected_type: "string"
+                    received_value: null
+                  occurred_at: "2025-01-15T10:30:15Z"
+                  subscriber_id: "sub_client_xyz"
+              processingError:
+                summary: Internal Processing Error
+                value:
+                  event_id: "evt_2b3c4d5e6f7g8h9i0j1k"
+                  error_type: "processing_error"
+                  error_code: "INTERNAL_ERROR"
+                  error_message: "Failed to update internal system with case data"
+                  error_details:
+                    internal_error: "Database connection timeout"
+                    retry_count: 3
+                  occurred_at: "2025-01-15T10:31:00Z"
+                  subscriber_id: "sub_client_xyz"
       responses:
-        "200":
-          description: Successfully accepted a new case
+        '200':
+          description: Feedback received successfully
           content:
-            "*/*":
-              schema:
-                $ref: "#/components/schemas/AsyncResponse"
-        "400":
-          $ref: "#/components/responses/400Error"
-  /api/v1/patient-demographics:
-    put:
-      description: Update patient demographics.
-      tags:
-        - outbound
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                physician:
-                  $ref: "#/components/schemas/physician"
-                patient:
-                  required:
-                    - "hash"
-                  type: object
-                  properties:
-                    hash:
-                      type: string
-                      description: A unique identifier for the patient
-                    other_mrns:
-                      $ref: "#/components/schemas/other_mrns"
-                    demographics:
-                      $ref: "#/components/schemas/demographics"
-      responses:
-        "200":
-          description: Successfully updated patient demographics
-          content:
-            "*/*":
+            application/json:
               schema:
                 type: object
                 properties:
                   status:
                     type: string
-                    example: Success
-                  patient:
-                    type: object
-                    properties:
-                      hash:
-                        type: string
-                        description: A unique identifier for the patient
-                      other_mrns:
-                        $ref: "#/components/schemas/other_mrns"
-                      physician:
-                        $ref: "#/components/schemas/physician"
-                      demographics:
-                        $ref: "#/components/schemas/demographics"
-        "400":
-          $ref: "#/components/responses/400Error"
-  /api/v1/events/{event_id}/jobs/{message_id}:
-    put:
-      description: Update the status of a job.
-      tags:
-        - inbound
+                    example: "received"
+                  feedback_id:
+                    type: string
+                    example: "fb_9z8y7x6w5v4u3t2s"
+                  message:
+                    type: string
+                    example: "Thank you for your feedback. We will investigate this issue."
+        '400':
+          description: Invalid feedback format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many feedback requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - apiKey: [ ]
+
+webhooks:
+  surgicalCaseNotification:
+    post:
+      summary: Surgical Case Notification
+      description: Webhook payload sent to subscribers when a surgical case is created or updated
+      operationId: receiveSurgicalCase
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/JobResult"
+              $ref: '#/components/schemas/WebhookEvent'
+            examples:
+              hipReplacement:
+                summary: Total Hip Replacement Event Example
+                value:
+                  event_id: "evt_1a2b3c4d5e6f7g8h9i0j"
+                  event_type: "surgical_case.created"
+                  event_timestamp: "2025-01-15T10:30:00Z"
+                  data:
+                    id: 199967
+                    universal_id: "26B21A"
+                    start: "2015-05-27T14:00:00Z"
+                    end: "2015-05-27T16:30:00Z"
+                    summary: "Total Hip Replacement"
+                    description: "Request for additional femoral head"
+                    procedure:
+                      body_site: "hip"
+                      name: "arthroplasty"
+                      approach: "direct anterior"
+                      implant: "bipolar"
+                      laterality: "left"
+                      revision: false
+                      trauma: false
+                      status: "confirmed"
+                    patient:
+                      mrn: "48214XZ3"
+                      name: "B. M."
+                      hash: "5710dba0761d92cd46d6a9e27da76c83f0721e6b"
+                      gender: "Female"
+                      age: 53
+                      contact:
+                        phone: "+15555555555"
+                        mobile: "+15555555555"
+                        email: "joe@shmo.com"
+                    location:
+                      ahaid: 123
+                      name: "St John Hospital"
+                    provider:
+                      npi: 1005300087
+                      name: "Andrew Surgeon"
+              subscriptionGranted:
+                summary: Subscription Granted Example
+                value:
+                  event_id: "evt_2b3c4d5e6f7g8h9i0j1k"
+                  event_type: "subscription.granted"
+                  event_timestamp: "2025-01-15T09:00:00Z"
+                  data:
+                    subscription:
+                      subscription_id: "sub_abc123def456"
+                      case_id: 199967
+                      case_universal_id: "26B21A"
+                      subscriber_id: "client_xyz"
+                      subscriber_name: "MedDevice Corp"
+                      access_level: "full"
+                      granted_at: "2025-01-15T09:00:00Z"
+                      granted_by: "admin@hospital.com"
+                      expires_at: "2025-12-31T23:59:59Z"
+                      is_active: true
+                    surgical_case: null
+              surgicalCaseWithSubscription:
+                summary: Surgical Case Created with Subscription Info
+                value:
+                  event_id: "evt_1a2b3c4d5e6f7g8h9i0j"
+                  event_type: "surgical_case.created"
+                  event_timestamp: "2025-01-15T10:30:00Z"
+                  data:
+                    subscription:
+                      subscription_id: "sub_abc123def456"
+                      case_id: 199967
+                      case_universal_id: "26B21A"
+                      subscriber_id: "client_xyz"
+                      subscriber_name: "MedDevice Corp"
+                      access_level: "full"
+                      granted_at: "2025-01-15T09:00:00Z"
+                      granted_by: "admin@hospital.com"
+                      expires_at: "2025-12-31T23:59:59Z"
+                      is_active: true
+                    surgical_case:
+                      id: 199967
+                      universal_id: "26B21A"
+                      start: "2025-05-27T14:00:00Z"
+                      end: "2025-05-27T16:30:00Z"
+                      summary: "Total Hip Replacement"
+                      description: "Request for additional femoral head"
+                      procedure:
+                        body_site: "hip"
+                        name: "arthroplasty"
+                        approach: "direct anterior"
+                        implant: "bipolar"
+                        laterality: "left"
+                        revision: false
+                        trauma: false
+                        status: "confirmed"
+                      patient:
+                        mrn: "48214XZ3"
+                        name: "B. M."
+                        hash: "5710dba0761d92cd46d6a9e27da76c83f0721e6b"
+                        gender: "Female"
+                        age: 53
+                        contact:
+                          phone: "+15555555555"
+                          mobile: "+15555555555"
+                          email: "patient.contact@example.com"
+                      location:
+                        ahaid: 123456
+                        name: "St John Hospital"
+                      provider:
+                        npi: 1005300087
+                        name: "Dr. Andrew Surgeon"
+              subscriptionRevoked:
+                summary: Subscription Revoked Example
+                value:
+                  event_id: "evt_3c4d5e6f7g8h9i0j1k2l"
+                  event_type: "subscription.revoked"
+                  event_timestamp: "2025-01-16T14:30:00Z"
+                  data:
+                    subscription:
+                      subscription_id: "sub_abc123def456"
+                      case_id: 199967
+                      case_universal_id: "26B21A"
+                      subscriber_id: "client_xyz"
+                      subscriber_name: "MedDevice Corp"
+                      access_level: "none"
+                      granted_at: "2025-01-15T09:00:00Z"
+                      granted_by: "admin@hospital.com"
+                      revoked_at: "2025-01-16T14:30:00Z"
+                      revoked_by: "system_admin"
+                      revoke_reason: "Case completed - access no longer required"
+                      is_active: false
+                    surgical_case: null
       responses:
-        "204":
-          description: "Accepted the job status update"
-        "400":
-          $ref: "#/components/responses/400Error"
-        "404":
-          description: "Event or job not found"
-servers:
-  - url: https://virtserver.swaggerhub.com/DocSpera/Event_Scheduling_Generic/1.0.0
-components:
-  parameters:
-    PageLimit:
-      name: limit
-      in: query
-      description: Limits the number of items on a page
-      schema:
-        type: integer
-    PageNumber:
-      name: offset
-      in: query
-      description: Specifies the page number of the artists to be displayed
-      schema:
-        type: integer
-  responses:
-    400Error:
-      description: Invalid request
-      content:
-        "*/*":
+        '200':
+          description: Webhook received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Webhook processed successfully"
+        '400':
+          description: Bad request - Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - Invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - webhookAuth: [ ]
+      parameters:
+        - in: header
+          name: X-Webhook-Signature
+          required: true
           schema:
-            type: object
-            properties:
-              status:
-                type: string
-                example: Error
+            type: string
+            pattern: "^sha256=[a-f0-9]{64}$"
+          description: HMAC-SHA256 signature of the request body
+          example: "sha256=5257a869e7ecaf4cb2d3f1aebd2c0e0e8d8a0e7d8c9f0a1b2c3d4e5f6a7b8c9d"
+        - in: header
+          name: X-Webhook-Timestamp
+          required: true
+          schema:
+            type: string
+          description: Unix timestamp when the webhook was sent
+          example: "1704384000"
+        - in: header
+          name: X-Webhook-Event-ID
+          required: true
+          schema:
+            type: string
+          description: Same as event_id in the payload for quick access
+          example: "evt_1a2b3c4d5e6f7g8h9i0j"
+
+components:
   schemas:
-    EventScheduling:
-      type: object
-      properties:
-        event:
-          type: object
-          required:
-            - "event_id"
-          properties:
-            event_id:
-              type: integer
-              example: 199967
-              description: Calendar event ID.
-            universal_id:
-              type: string
-              example: "26B21A"
-              description: Universal ID.
-            start:
-              type: string
-              example: "2015-05-27T14:00:00Z"
-              description: ISO date of when the event will start in UTC
-            end:
-              type: string
-              example: "2015-05-27T16:30:00Z"
-              description: ISO date of when the event will end in UTC
-            case:
-              type: string
-              example: "Total Hip Replacement"
-              description: Name of the event.
-            procedure:
-              type: string
-              example: Hip
-              description: The type of appointment
-            orientation:
-              type: integer
-              example: Left
-              description: "Left, Right, Unknown"
-            details:
-              type: string
-              example: Request for addtional femoral head
-              description: Free form text field coming from the EMR that describes the
-                procedure
-            status:
-              type: string
-              example: Confirmed
-              description: "Possible options: Confirmed, Pending, Cancelled"
-            laterality:
-              type: string
-              example: "Bi-lateral"
-              description: "'Bi-lateral', 'Uni-lateral', ''"
-            location:
-              type: object
-              properties:
-                ahaid:
-                  type: string
-                  example: 123
-                  description: Facility ID
-                name:
-                  type: string
-                  example: St John Hospital
-                  description: Surgical location
-            physician:
-              type: array
-              items:
-                $ref: "#/components/schemas/physician"
-            reps:
-              type: array
-              items:
-                properties:
-                  id:
-                    type: integer
-                    example: "430"
-                    description: An identification number assigned by DocSpera
-                  name:
-                    type: string
-                    example: Brian Miller
-                    description: Full name of industry representative
-            patient:
-              type: object
-              properties:
-                mrn:
-                  type: string
-                  example: 48214XZ3
-                  description: Medical record number of the patient
-                other_mrns:
-                  $ref: "#/components/schemas/other_mrns"
-                initials:
-                  type: string
-                  example: "B. M."
-                  description: Patient's initials
-                hash:
-                  type: string
-                  description: A unique identifier for the patient
-            demographics:
-              $ref: "#/components/schemas/demographics"
-            equipment:
-              type: object
-              properties:
-                devices:
-                  type: array
-                  items:
-                    properties:
-                      name:
-                        type: string
-                        example: Device A iHip 2000
-                        description: Name of the device
-            study:
-              type: array
-              items:
-                properties:
-                  id:
-                    type: integer
-                    example: 1810
-                    description: An identification number assigned by DocSpera
-                  name:
-                    type: string
-                    example: "MRIX LUMBAR"
-                    description: Full name of attending physician
-                  url:
-                    type: string
-                    example: "https://docspera/dicom/4159152/study/181002367/1744f3954c37e2ea6bf693bf37b8e98b.zip"
-                    description: The URL of the study
-    demographics:
-      type: object
-      properties:
-        gender:
-          type: string
-          example: "Female"
-          description: Patient's natural gender. Legal values are * Male, * Female
-        age:
-          type: integer
-          example: 53
-          description: Patient's age in years
-        height:
-          type: float
-          example: 178.00
-          description: Patient's height in cm
-        weight:
-          type: float
-          example: 71.214
-          description: Patient's weight in kg
-    physician:
+    WebhookEvent:
       type: object
       required:
-        - "npi"
+        - event_id
+        - event_type
+        - event_timestamp
+        - data
+      properties:
+        event_id:
+          type: string
+          description: Unique identifier for this event
+          example: "evt_1a2b3c4d5e6f7g8h9i0j"
+        event_type:
+          type: string
+          description: Type of event being sent
+          enum:
+            - "surgical_case.created"
+            - "surgical_case.updated"
+            - "surgical_case.cancelled"
+            - "surgical_case.completed"
+            - "surgical_case.rescheduled"
+            - "subscription.granted"
+            - "subscription.revoked"
+            - "subscription.expired"
+          example: "surgical_case.created"
+        event_timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the event was generated
+          example: "2025-01-15T10:30:00Z"
+        webhook_version:
+          type: string
+          description: Version of the webhook payload format
+          default: "1.0"
+          example: "1.0"
+        retry_attempt:
+          type: integer
+          description: Number of retry attempts for this event (0 for first attempt)
+          minimum: 0
+          default: 0
+          example: 0
+        data:
+          type: object
+          properties:
+            subscription:
+              description: Subscription data if applicable (for granted/revoked events)
+              oneOf:
+                - $ref: '#/components/schemas/SubscriptionData'
+                - type: "null"
+            surgical_case:
+              description: Surgical case data if applicable (for surgical_case events)
+              oneOf:
+                - $ref: '#/components/schemas/SurgicalCase'
+                - type: "null"
+        metadata:
+          type: object
+          description: Optional metadata about the event
+          additionalProperties: true
+          example:
+            source_system: "surgery_scheduler"
+            user_id: "usr_123"
+
+    SurgicalCase:
+      type: object
+      required:
+        - id
+        - universal_id
+        - start
+        - end
+        - summary
+        - procedure
+        - patient
+        - location
+        - provider
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the surgical case
+          example: 199967
+        universal_id:
+          type: string
+          description: Universal identifier across systems
+          example: "26B21A"
+        start:
+          type: string
+          format: date-time
+          description: Scheduled start time of the procedure
+          example: "2015-05-27T14:00:00Z"
+        end:
+          type: string
+          format: date-time
+          description: Scheduled end time of the procedure
+          example: "2015-05-27T16:30:00Z"
+        summary:
+          type: string
+          description: Brief summary of the procedure
+          example: "Total Hip Replacement"
+        description:
+          type: string
+          description: Additional details or notes about the procedure
+          example: "Request for additional femoral head"
+        procedure:
+          $ref: '#/components/schemas/Procedure'
+        patient:
+          $ref: '#/components/schemas/Patient'
+        location:
+          $ref: '#/components/schemas/Location'
+        provider:
+          $ref: '#/components/schemas/Provider'
+
+    Procedure:
+      type: object
+      required:
+        - body_site
+        - name
+        - revision
+        - trauma
+        - status
+      properties:
+        body_site:
+          type: string
+          description: Anatomical site of the procedure
+          example: "hip"
+        name:
+          type: string
+          description: Name of the procedure
+          example: "arthroplasty"
+        approach:
+          type: string
+          description: Surgical approach used
+          example: "direct anterior"
+        implant:
+          type: string
+          description: Type of implant used
+          example: "bipolar"
+        laterality:
+          type: string
+          description: Side of the body (left/right)
+          enum: [ "left", "right", "bilateral" ]
+          example: "left"
+        revision:
+          type: boolean
+          description: Whether this is a revision surgery
+          example: false
+        trauma:
+          type: boolean
+          description: Whether this is a trauma-related procedure
+          example: false
+        status:
+          type: string
+          description: Current status of the procedure
+          enum: [ "scheduled", "confirmed", "in_progress", "completed", "cancelled", "postponed", "on_hold" ]
+          example: "confirmed"
+
+    Patient:
+      type: object
+      required:
+        - mrn
+        - name
+        - hash
+        - gender
+        - age
+      properties:
+        mrn:
+          type: string
+          description: Medical Record Number
+          example: "48214XZ3"
+        name:
+          type: string
+          description: Patient name (may be abbreviated for privacy)
+          example: "B. M."
+        hash:
+          type: string
+          description: Hashed patient identifier for privacy
+          pattern: "^[a-f0-9]{40}$"
+          example: "5710dba0761d92cd46d6a9e27da76c83f0721e6b"
+        gender:
+          type: string
+          description: Patient gender
+          enum: [ "Male", "Female", "Other", "Unknown" ]
+          example: "Female"
+        age:
+          type: integer
+          description: Patient age in years
+          minimum: 0
+          maximum: 150
+          example: 53
+        contact:
+          $ref: '#/components/schemas/PatientContact'
+
+    PatientContact:
+      type: object
+      properties:
+        phone:
+          type: string
+          description: Primary phone number
+          pattern: "^\\+?[1-9]\\d{1,14}$"
+          example: "+15555555555"
+        mobile:
+          type: string
+          description: Mobile phone number
+          pattern: "^\\+?[1-9]\\d{1,14}$"
+          example: "+15555555555"
+        email:
+          type: string
+          format: email
+          description: Email address
+          example: "joe@shmo.com"
+
+    Location:
+      type: object
+      required:
+        - ahaid
+        - name
+      properties:
+        ahaid:
+          type: integer
+          description: American Hospital Association ID
+          example: 123
+        name:
+          type: string
+          description: Name of the healthcare facility
+          example: "St John Hospital"
+
+    Provider:
+      type: object
+      required:
+        - npi
+        - name
       properties:
         npi:
           type: integer
+          description: National Provider Identifier
           example: 1005300087
-          description: NPI is a unique 10-digit identification number issued by CMS
         name:
           type: string
-          example: Andrew Surgeon
-          description: Full name of attending physician
-    other_mrns:
-      type: array
-      items:
-        properties:
-          mrn:
-            type: string
-            example: JDV123
-            description: An additional medical record number associated with the patient
-          location:
-            type: string
-            example: Mercy Hospital
-            description: The facility associated with the MRN
-    AsyncResponse:
+          description: Name of the healthcare provider
+          example: "Andrew Surgeon"
+
+    Error:
       type: object
+      required:
+        - error
+        - message
       properties:
-        id:
+        error:
           type: string
-          format: uuid
-          description: Job UUID
-          example: "c97e5eca-7b3d-4b97-89b2-c56e83c02215"
-        status:
-          type: string
-          enum:
-            - "accepted"
-            - "rejected"
-            - "error"
-            - "unknown"
+          description: Error code
+          example: "INVALID_PAYLOAD"
         message:
           type: string
-          example: "[1234] Queued"
-        event_id:
-          type: integer
-          example: 199967
-          description: DocSpera Event ID
-    JobResult:
-      type: object
-      properties:
-        isSuccess:
-          type: boolean
-          example: true
-        message:
-          type: string
-          example: "Case updated"
-        data:
+          description: Human-readable error message
+          example: "The provided payload does not match the expected schema"
+        details:
           type: object
-          nullable: true
+          description: Additional error details
+          additionalProperties: true
+
+    SubscriptionData:
+      type: object
+      required:
+        - subscription_id
+        - case_id
+        - case_universal_id
+      properties:
+        subscription_id:
+          type: string
+          description: Unique identifier for the subscription
+          example: "sub_abc123def456"
+        case_id:
+          type: integer
+          description: ID of the surgical case
+          example: 199967
+        case_universal_id:
+          type: string
+          description: Universal ID of the surgical case
+          example: "26B21A"
+        granted_at:
+          type: string
+          format: date-time
+          description: When access was granted (for granted events)
+          example: "2025-01-15T09:00:00Z"
+        revoked_at:
+          type: string
+          format: date-time
+          description: When access was revoked (for revoked events)
+          example: "2025-01-16T14:30:00Z"
+        expires_at:
+          type: string
+          format: date-time
+          description: When the subscription expires (optional)
+          example: "2025-12-31T23:59:59Z"
+        granted_by:
+          type: string
+          description: User or system that granted access
+          example: "system_admin"
+        revoked_by:
+          type: string
+          description: User or system that revoked access
+          example: "system_admin"
+        access_level:
+          type: string
+          description: Level of access granted
+          enum: [ "full", "limited", "read_only" ]
+          example: "full"
+        reason:
+          type: string
+          description: Reason for granting/revoking access
+          example: "Vendor authorized for case support"
+        effective_immediately:
+          type: boolean
+          description: Whether revocation takes effect immediately
+          default: true
+          example: true
+
+    WebhookFeedback:
+      type: object
+      required:
+        - event_id
+        - error_type
+        - error_code
+        - error_message
+        - occurred_at
+        - subscriber_id
+      properties:
+        event_id:
+          type: string
+          description: The event_id from the webhook payload that caused the error
+          example: "evt_1a2b3c4d5e6f7g8h9i0j"
+        error_type:
+          type: string
+          description: Category of error encountered
+          enum:
+            - "validation_error"
+            - "processing_error"
+            - "authentication_error"
+            - "rate_limit_error"
+            - "timeout_error"
+            - "business_logic_error"
+          example: "validation_error"
+        error_code:
+          type: string
+          description: Specific error code for debugging
+          example: "INVALID_SCHEMA"
+        error_message:
+          type: string
+          description: Human-readable error description
+          example: "Required field 'procedure.status' is missing"
+        error_details:
+          type: object
+          description: Additional structured error information
+          additionalProperties: true
+          example:
+            field: "procedure.status"
+            expected_type: "string"
+            received_value: null
+        occurred_at:
+          type: string
+          format: date-time
+          description: Timestamp when the error occurred
+          example: "2025-01-15T10:30:15Z"
+        subscriber_id:
+          type: string
+          description: Identifier of the subscriber reporting the error
+          example: "sub_client_xyz"
+        webhook_url:
+          type: string
+          format: uri
+          description: The webhook URL that received the payload (optional)
+          example: "https://api.client.com/webhooks/surgical-cases"
+        http_status_returned:
+          type: integer
+          description: HTTP status code your system returned for the webhook
+          minimum: 100
+          maximum: 599
+          example: 500
+        retry_attempt:
+          type: integer
+          description: Which retry attempt this error occurred on (from webhook envelope)
+          minimum: 0
+          example: 0
+        affected_resources:
+          type: array
+          description: List of internal resources affected by the error
+          items:
+            type: object
+            properties:
+              resource_type:
+                type: string
+                example: "patient_record"
+              resource_id:
+                type: string
+                example: "pat_123"
+        suggested_action:
+          type: string
+          description: Subscriber's suggestion for resolving the issue
+          example: "Please ensure all new fields are documented before deployment"
+
+  securitySchemes:
+    webhookAuth:
+      type: apiKey
+      in: header
+      name: X-Webhook-Signature
+      description: |
+        HMAC-SHA256 signature for webhook payload verification.
+        
+        **Signature Format**: `sha256=<hex-digest>`
+        
+        **How to verify**:
+        1. Retrieve your webhook secret from secure storage
+        2. Compute HMAC-SHA256 of the raw request body using your secret
+        3. Compare with the signature in X-Webhook-Signature header
+        4. Also validate X-Webhook-Timestamp is within 5 minutes to prevent replay attacks
+        
+        **Example verification (Node.js)**:
+        ```javascript
+        const crypto = require('crypto');
+        
+        function verifyWebhookSignature(payload, signature, secret, timestamp) {
+          // Check timestamp to prevent replay attacks
+          const currentTime = Math.floor(Date.now() / 1000);
+          const webhookTime = parseInt(timestamp);
+          if (Math.abs(currentTime - webhookTime) > 300) { // 5 minutes
+            throw new Error('Webhook timestamp too old');
+          }
+        
+          // Create signature
+          const expectedSignature = 'sha256=' + crypto
+            .createHmac('sha256', secret)
+            .update(timestamp + '.' + payload)
+            .digest('hex');
+        
+          // Compare signatures using timing-safe comparison
+          return crypto.timingSafeEqual(
+            Buffer.from(signature),
+            Buffer.from(expectedSignature)
+          );
+        }
+        ```
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authenticating feedback submissions
